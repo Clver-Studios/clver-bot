@@ -40,6 +40,23 @@ const interactionCreateEvent: Event = {
                 interaction.replied || interaction.deferred ? await interaction.followUp(payload) : await interaction.reply(payload);
             }
         }
+
+        // 3. Handle Modal Interactive Form Submissions
+        if (interaction.isModalSubmit()) {
+            const handler = client.components.get(interaction.customId) || 
+                            Array.from(client.components.values()).find(h => interaction.customId.startsWith(h.customId));
+            
+            if (!handler) return;
+
+            try {
+                await handler.execute(interaction);
+            } catch (error) {
+                console.error(`Modal processing failure for ID: ${interaction.customId}`, error);
+                const payload = { content: 'Failed to process your modal form layout metrics.', ephemeral: true };
+                interaction.replied || interaction.deferred ? await interaction.followUp(payload) : await interaction.reply(payload);
+            }
+            return;
+        }
     }
 };
 
