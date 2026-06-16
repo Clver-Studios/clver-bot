@@ -1,6 +1,22 @@
-# Clevr Network Discord Bot
+# Clevr Discord Bot
 
-An automated community administration and onboarding gateway designed for the Clevr Network Discord ecosystem. The application utilizes Node.js, TypeScript, and Prisma to manage multi-step interactive onboarding flows, role allocations, and database-driven branded server announcements.
+An automated community administration and onboarding gateway designed for the Clevr Discord ecosystem. The application utilizes Node.js, TypeScript, and Prisma to manage multi-step interactive onboarding flows, role allocations, and database-driven branded server announcements.
+
+---
+
+## Functional Features
+
+### Interactive Member Onboarding Gateway
+Provides a structured validation sequence for incoming server members to establish target demographics and profile metrics before granting access permissions.
+* **Persistent Anchor Components:** Deploys interactive select menus within designated onboarding channels to initiate the tracking loop.
+* **Stateful User Tracking:** Records individual selection steps (such as primary platform focus, industry specialties, and notification preferences) securely into PostgreSQL.
+* **Automated Role Management:** Evaluates submission matrices upon completion to automatically apply corresponding guild roles and remove restriction flags.
+
+### Dynamic Modal Announcement System
+Enables administrative teams to publish uniformly branded, markdown-supported updates across guild communication channels via an abstracted workflow.
+* **Centralized Color Registry:** Offers an administrative command (`/announce-config`) to bind custom brand hex codes to specific operational categories (e.g., updates, events, network) inside the database.
+* **Native Input Canvas:** Triggers full-screen Discord modal sheets via `/announce`, eliminating the layout restrictions of standard slash command option fields.
+* **Dynamic Embed Compilers:** Resolves the parsed input strings against the stored database color token maps at runtime to output clean, timestamped informational embeds.
 
 ---
 
