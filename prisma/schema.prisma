@@ -1,0 +1,33 @@
+// Step 1: Declare the basic datasource provider engine type
+datasource db {
+  provider = "postgresql"
+}
+
+// Step 2: Define the modern Prisma 7 type compiler generator
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/client"
+}
+
+// Step 3: Core data model for cross-session onboarding states
+model OnboardingState {
+  userId        String   @id @map("user_id")
+  currentStep   Int      @default(1) @map("current_step")
+  platform      String?
+  clients       String[]
+  specialties   String[]
+  notifications String[]
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("onboarding_states")
+}
+
+// Step 4: Core data model for persistent announcement settings
+model AnnouncementConfig {
+  id        String   @id @default(uuid())
+  category  String   @unique
+  hexColor  String   @map("hex_color")
+  createdAt DateTime @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at")
+
+  @@map("announcement_configs")
+}
