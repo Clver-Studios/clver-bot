@@ -1,13 +1,10 @@
 import { PrismaClient } from '@prisma/client';
 
-// Initialize the standard client. It natively pulls DATABASE_URL from your process environment.
+// Instantiate standard client relying cleanly on environment hydration parameters
 export const prisma = new PrismaClient({
-    log: process.env.NODE_ENV === 'production' 
-        ? ['error'] 
-        : ['query', 'info', 'warn', 'error'],
+    log: process.env.NODE_ENV === 'production' ? ['error'] : ['query', 'info', 'warn', 'error'],
 });
 
-// Verify connection capability on application bootstrap
 export async function connectDatabase(): Promise<void> {
     try {
         await prisma.$connect();

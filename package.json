@@ -4,6 +4,7 @@
   "description": "A scalable, 2026-optimized onboarding and announcement Discord bot",
   "main": "dist/index.js",
   "packageManager": "pnpm@9.1.0",
+  "type": "module",
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",

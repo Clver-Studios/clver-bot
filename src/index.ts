@@ -2,12 +2,12 @@ import { Client, GatewayIntentBits, Collection } from 'discord.js';
 import { validateEnvironment } from './config/environment.js';
 import { connectDatabase } from './database/client.js';
 import { ExtendedClient } from './types/framework.js';
-import { loadSlashCommands, loadGatewayEvents } from './utils/loader.js';
+import { loadSlashCommands, loadGatewayEvents, loadComponentInteractions } from './utils/loader.js';
 
-// Step 1: Perform immediate configuration system diagnostics checks
+// Step 1: Secure our clean, validated environment configuration keys
 const environment = validateEnvironment();
 
-// Step 2: Setup memory space targets with optimized client structures
+// Step 2: Initialize the Discord Client instance with explicit intent gateways
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -17,20 +17,23 @@ const client = new Client({
     ]
 }) as ExtendedClient;
 
-// Step 3: Allocate clean Collection structure to store command maps seamlessly
+// Step 3: Instantiate runtime collection stores for modular interaction mapping
 client.commands = new Collection();
+client.components = new Collection();
 
-// Step 4: Group modular execution phases safely to optimize cluster connections
+// Step 4: Define the core application bootstrap orchestration loop
 async function initializeClevrBotEngine(): Promise<void> {
-    // Authenticate database persistence connections
+    // A. Verify and lock in backend database connectivity boundaries
     await connectDatabase();
 
-    // Step 5: Perform dynamic internal scans across commands and routing structures
     console.log('Loader Engine: Starting structural workspace mapping process...');
+    
+    // B. Scan, load, and cache runtime modular architecture blocks
     client.commands = await loadSlashCommands('commands');
+    client.components = await loadComponentInteractions('interactions');
     const dynamicEvents = await loadGatewayEvents('events');
 
-    // Step 6: Bind event routines directly onto standard gateway listener targets safely
+    // C. Bind gateway event hooks to their respective listeners inside the client core
     for (const targetEvent of dynamicEvents) {
         if (targetEvent.once) {
             client.once(targetEvent.name, (...args: unknown[]) => targetEvent.execute(...args, client));
@@ -39,13 +42,13 @@ async function initializeClevrBotEngine(): Promise<void> {
         client.on(targetEvent.name, (...args: unknown[]) => targetEvent.execute(...args, client));
     }
 
-    console.log(`Loader Engine: ${client.commands.size} commands and ${dynamicEvents.length} platform events mapped.`);
-
-    // Step 7: Authenticate connection channels safely into the Discord Gateway API
+    console.log(`Loader Engine: ${client.commands.size} commands, ${client.components.size} modules, and ${dynamicEvents.length} events loaded.`);
+    
+    // D. Authenticate and connect the bot framework session with Discord
     await client.login(environment.discordToken);
 }
 
-// Global scope tracker exception catcher to preserve clean execution states
+// Step 5: Execute initialization sequence and intercept unhandled bootstrap panics
 initializeClevrBotEngine().catch((criticalFailure) => {
     console.error('Critical Framework Panic: Primary boot pipeline context destroyed.', criticalFailure);
     process.exit(1);
