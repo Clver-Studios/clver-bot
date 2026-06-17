@@ -1,32 +1,40 @@
-# Step 1: Initialize temporary build environment using Node 22 Alpine
-FROM node:22-alpine AS builder
+# Step 1: Base runtime layer definition
+FROM node:22-alpine AS base
+RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 
-# Step 2: Enable Corepack to utilize native pnpm package management
-RUN corepack enable && corepack prepare pnpm@latest --activate
-
-# Step 3: Copy lockfiles and fetch dependencies into virtual store cache
+# Step 2: Dependency isolation layer
+FROM base AS dependencies
 COPY pnpm-lock.yaml package.json ./
 RUN pnpm fetch
-
-# Step 4: Install cached offline dependencies and compile codebase
-COPY tsconfig.json ./
-COPY src ./src
 RUN pnpm install --offline
+
+# Step 3: Application compilation layer
+FROM base AS builder
+COPY pnpm-lock.yaml package.json ./
+# Pull dependencies from the isolation cache layer
+COPY --from=dependencies /app/node_modules ./node_modules
+
+# CRITICAL: Copy schema definitions and generate engine types inside the container first
+COPY prisma ./prisma/
+RUN pnpm prisma generate
+
+# Copy the rest of the engine source code files
+COPY tsconfig.json ./
+COPY src ./src/
+
+# Execute the TypeScript compiler safely with hydrated engine models
 RUN pnpm run build
 
-# Step 5: Prune development footprints down to lean runtime needs
-RUN pnpm prune --prod
-
-# Step 6: Construct standalone clean runtime container layer
-FROM node:22-alpine AS runner
-WORKDIR /app
+# Step 4: Prune development footprints down to lean production needs
+FROM base AS runner
 ENV NODE_ENV=production
-
-# Step 7: Import compiled logic and runtime components from the builder
-COPY --from=builder /app/package.json ./
+COPY package.json ./
+# IMPORTANT: pull node_modules from builder, not dependencies — builder's copy
+# includes the generated Prisma client (.prisma/client) created by `pnpm prisma generate`.
+# Copying from `dependencies` ships node_modules from before that generation step ran.
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/prisma ./prisma
 
-# Step 8: Low-overhead production boot sequence
 CMD ["node", "dist/index.js"]

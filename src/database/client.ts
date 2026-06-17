@@ -1,7 +1,14 @@
-import { PrismaClient } from '@prisma/client';
+import pkg from '@prisma/client';
+const { PrismaClient } = pkg;
+import { PrismaPg } from '@prisma/adapter-pg';
+
+// Prisma 7's "client" engine type requires an explicit driver adapter —
+// it does not fall back to a built-in query engine binary.
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 
 // Instantiate standard client relying cleanly on environment hydration parameters
 export const prisma = new PrismaClient({
+    adapter,
     log: process.env.NODE_ENV === 'production' ? ['error'] : ['query', 'info', 'warn', 'error'],
 });
 

@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, Collection } from 'discord.js';
+import { Client, GatewayIntentBits, Collection, REST, Routes, ActivityType } from 'discord.js';
 import { validateEnvironment } from './config/environment.js';
 import { connectDatabase } from './database/client.js';
 import { ExtendedClient } from './types/framework.js';
@@ -44,6 +44,38 @@ async function initializeClevrBotEngine(): Promise<void> {
 
     console.log(`Loader Engine: ${client.commands.size} commands, ${client.components.size} modules, and ${dynamicEvents.length} events loaded.`);
     
+    // REGISTRATION HOOK: Catch the ready state to synchronize guild-scoped slash commands
+    client.once('ready', async (readyClient) => {
+        console.log(`Gateway Sync: Connection established safely. Logged in as ${readyClient.user.tag}`);
+
+        readyClient.user.setPresence({
+            activities: [{ name: 'Clevr Network Onboarding', type: ActivityType.Watching }],
+            status: 'online',
+        });
+
+        if (!client.commands || client.commands.size === 0) {
+            console.warn('API Registry Warning: No commands found in local memory collection. Skipping REST deployment.');
+            return;
+        }
+
+        try {
+            const cleanCommandsPayload = client.commands.map(command => command.data.toJSON());
+            const restEngine = new REST({ version: '10' }).setToken(environment.discordToken);
+
+            // FIXED: Pulling cleanly from environment mapping configuration parameters
+            console.log(`API Registry: Initializing instant push of ${cleanCommandsPayload.length} slash commands to Guild: ${environment.guildId}...`);
+
+            await restEngine.put(
+                Routes.applicationGuildCommands(readyClient.user.id, environment.guildId),
+                { body: cleanCommandsPayload }
+            );
+
+            console.log('API Registry: Guild slash commands synchronized successfully with Discord endpoints!');
+        } catch (error) {
+            console.error('API Registry Failure: Could not synchronize slash commands over REST pipeline.', error);
+        }
+    });
+
     // D. Authenticate and connect the bot framework session with Discord
     await client.login(environment.discordToken);
 }
