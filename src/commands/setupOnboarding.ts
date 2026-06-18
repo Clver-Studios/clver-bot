@@ -32,7 +32,7 @@ const setupOnboardingCommand: Command = {
         if (targetChannel && typeof targetChannel.send === 'function') {
             // Drop the primary persistent message into the active verification channel layout
             await targetChannel.send({
-                content: '## 👋 Welcome to Clevr Network!\nBefore gaining complete entry parameters to our server infrastructure, please answer these brief onboarding inquiries to build your community profile card metrics.',
+                content: '## 👋 Welcome to Clevr Studios!\nBefore gaining complete entry parameters to our server infrastructure, please answer these brief onboarding inquiries to build your community profile card metrics.',
                 components: [selectMenuRow]
             });
         } else {

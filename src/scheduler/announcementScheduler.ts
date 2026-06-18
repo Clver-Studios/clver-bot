@@ -36,7 +36,7 @@ export function startAnnouncementScheduler(client: Client): void {
           .setColor(resolvedHexColor)
           .setTimestamp()
           .setFooter({
-            text: `Clevr Network Hub • ${item.category.toUpperCase()}`,
+            text: `Clevr Studios • ${item.category.toUpperCase()}`,
           });
 
         try {

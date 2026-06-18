@@ -67,7 +67,7 @@ const analyticsCommand: Command = {
         ];
 
         const embed = new EmbedBuilder()
-            .setTitle('📊 Clevr Network — Onboarding Analytics')
+            .setTitle('📊 Clevr Studios — Onboarding Analytics')
             .addFields(
                 { name: '📣 Discovery Source', value: referralLines.join('\n') || 'No data', inline: false },
                 { name: '🎮 Platform Edition', value: editionLines.join('\n') || 'No data', inline: false },

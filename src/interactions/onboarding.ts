@@ -19,7 +19,7 @@ function buildOnboardingEmbed(step: number, title: string, description: string) 
         .setTitle(`✨ Profile Setup — ${title}`)
         .setDescription(`${description}\n\n**Progress:** [${filledBar}] (Step ${step}/${totalSteps})`)
         .setColor('#5865F2')
-        .setFooter({ text: 'Clevr Network Community Verification Gateway' });
+        .setFooter({ text: 'Clevr Studios Community Verification Gateway' });
 }
 
 export const onboardingHandler: ComponentHandler = {
