@@ -53,6 +53,17 @@ jobs:
       - name: Checkout Source Code Repository
         uses: actions/checkout@v4
 
+      # Prepare the deployment directory in user space to avoid permission blocks
+      - name: Configure Host Directories via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PRODUCTION_SERVER_IP }}
+          username: ${{ secrets.PRODUCTION_SERVER_USER }}
+          key: ${{ secrets.PRODUCTION_SERVER_SSH_KEY }}
+          port: 22
+          script: |
+            mkdir -p ~/clevr-bot
+
       - name: Copy Production Compose Configuration to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -61,29 +72,31 @@ jobs:
           key: ${{ secrets.PRODUCTION_SERVER_SSH_KEY }}
           port: 22
           source: "docker-compose.prod.yml"
-          target: "/opt/clevr-bot/"
+          target: "/home/${{ secrets.PRODUCTION_SERVER_USER }}/clevr-bot/"
 
-      - name: SSH into Production Server and Pull Latest Infrastructure Containers
+      - name: SSH into Production Server and Deploy Architecture
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.PRODUCTION_SERVER_IP }}
           username: ${{ secrets.PRODUCTION_SERVER_USER }}
           key: ${{ secrets.PRODUCTION_SERVER_SSH_KEY }}
           port: 22
+          # We pass the dynamic registry tokens as explicit shell environment variables
+          envs: GITHUB_TOKEN
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
           script: |
-            cd /opt/clevr-bot
+            cd ~/clevr-bot
 
-            # Rename the production config file to standard format on the host
-            mv docker-compose.prod.yml docker-compose.yml
+            # Move and format compose config file safely
+            mv docker-compose.prod.yml docker-compose.yml 2>/dev/null || true
 
-            # Authenticate server terminal session with GitHub Packages
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            # Authenticate the host terminal wrapper to GHCR securely
+            echo "$GITHUB_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-            # Fetch the new image layers
+            # Pull the fresh production container image layers
             docker compose pull
 
-            # Run database push/migrations safely
-            docker compose run --rm bot pnpm prisma db push
-
-            # Boot up the updated services
-            docker compose up -d --remove-orphans
+            # Spin up the infrastructure containers (DB comes up first)
+            docker compose
