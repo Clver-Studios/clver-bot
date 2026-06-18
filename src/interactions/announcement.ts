@@ -1,59 +1,115 @@
-import { EmbedBuilder, ColorResolvable, GuildTextBasedChannel, ModalSubmitInteraction } from 'discord.js';
-import { ComponentHandler } from '../types/framework.js';
-import { prisma } from '../database/client.js';
+import {
+  EmbedBuilder,
+  ColorResolvable,
+  GuildTextBasedChannel,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+  ActionRowBuilder,
+  MessageFlags,
+} from "discord.js";
+import { ComponentHandler } from "../types/framework.js";
+import { prisma } from "../database/client.js";
 
-export const announcementModalHandler: ComponentHandler = {
-    // Tell the loader engine to direct match keys starting with this base token structure
-    customId: 'announce_modal_',
+// Shared so both this select-menu flow and any future direct-modal path
+// (e.g. a power-user shortcut later) build an identical modal.
+function buildAnnouncementModal(categoryKey: string): ModalBuilder {
+  const modal = new ModalBuilder()
+    .setCustomId(`announce_modal_${categoryKey}`)
+    .setTitle(`Draft Announcement — [${categoryKey.toUpperCase()}]`);
 
-    async execute(interaction): Promise<void> {
-        // Step 1: Strict type guard guarding to narrow the union parameter down to a modal submission
-        if (!interaction.isModalSubmit()) {
-            return;
-        }
+  const titleInput = new TextInputBuilder()
+    .setCustomId("announce_title")
+    .setLabel("EMBED HEADER TITLE")
+    .setPlaceholder("Enter a bold headline for this announcement...")
+    .setStyle(TextInputStyle.Short)
+    .setRequired(true)
+    .setMaxLength(100);
 
-        // Step 2: Defer early so the application client does not hang while database reads process
-        await interaction.deferReply({ ephemeral: true });
+  const bodyInput = new TextInputBuilder()
+    .setCustomId("announce_body")
+    .setLabel("MESSAGE BODY (SUPPORTS MARKDOWN)")
+    .setPlaceholder(
+      "## 📢 Update Details\n- Added new profile cards\n- Resolved database connection leaks...",
+    )
+    .setStyle(TextInputStyle.Paragraph)
+    .setRequired(true)
+    .setMaxLength(3000);
 
-        // Step 3: Parse out the target category string straight from the unique ID layout
-        const targetCategory = interaction.customId.replace('announce_modal_', '');
-        
-        const embeddedTitle = interaction.fields.getTextInputValue('announce_title');
-        const embeddedBody = interaction.fields.getTextInputValue('announce_body');
+  const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(
+    titleInput,
+  );
+  const secondActionRow =
+    new ActionRowBuilder<TextInputBuilder>().addComponents(bodyInput);
 
-        // Step 4: Query the database to retrieve the customized category color token mapping
-        const colorConfig = await prisma.announcementConfig.findUnique({
-            where: { category: targetCategory }
-        });
+  modal.addComponents(firstActionRow, secondActionRow);
+  return modal;
+}
 
-        // Step 5: Fall back to a default color if the category wasn't seeded first
-        const resolvedHexColor = (colorConfig?.hexColor || '#5865F2') as ColorResolvable;
+// Step 1 of the flow: category picked from the select menu → open the modal
+export const announcementCategorySelectHandler: ComponentHandler = {
+  customId: "announce_category_select",
 
-        // Step 6: Construct the polished announcement display card
-        const announcementEmbed = new EmbedBuilder()
-            .setTitle(embeddedTitle)
-            .setDescription(embeddedBody)
-            .setColor(resolvedHexColor)
-            .setTimestamp()
-            .setFooter({ 
-                text: `Clevr Network Hub • ${targetCategory.toUpperCase()}`, 
-                iconURL: interaction.guild?.iconURL() || undefined 
-            });
-
-        const targetChannel = interaction.channel as GuildTextBasedChannel;
-
-        // Step 7: Verify channel context capabilities before dispatching the payload
-        if (targetChannel && typeof targetChannel.send === 'function') {
-            // Dispatch the completed embed to the channel
-            await targetChannel.send({ embeds: [announcementEmbed] });
-
-            await interaction.editReply({
-                content: `🚀 Successfully broadcasted the Branded \`${targetCategory.toUpperCase()}\` update panel.`
-            });
-        } else {
-            await interaction.editReply({
-                content: '❌ Failed to broadcast: Channel is invalid or does not support text outputs.'
-            });
-        }
+  async execute(interaction): Promise<void> {
+    if (!interaction.isStringSelectMenu()) {
+      return;
     }
+
+    const categoryKey = interaction.values[0];
+    const modal = buildAnnouncementModal(categoryKey);
+
+    // Must be the initial response — no defer/reply before this
+    await interaction.showModal(modal);
+  },
+};
+
+// Step 2 of the flow: modal submitted → build and dispatch the embed
+export const announcementModalHandler: ComponentHandler = {
+  customId: "announce_modal_",
+
+  async execute(interaction): Promise<void> {
+    if (!interaction.isModalSubmit()) {
+      return;
+    }
+
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+    const targetCategory = interaction.customId.replace("announce_modal_", "");
+
+    const embeddedTitle =
+      interaction.fields.getTextInputValue("announce_title");
+    const embeddedBody = interaction.fields.getTextInputValue("announce_body");
+
+    const colorConfig = await prisma.announcementConfig.findUnique({
+      where: { category: targetCategory },
+    });
+
+    const resolvedHexColor = (colorConfig?.hexColor ||
+      "#5865F2") as ColorResolvable;
+
+    const announcementEmbed = new EmbedBuilder()
+      .setTitle(embeddedTitle)
+      .setDescription(embeddedBody)
+      .setColor(resolvedHexColor)
+      .setTimestamp()
+      .setFooter({
+        text: `Clevr Network Hub • ${targetCategory.toUpperCase()}`,
+        iconURL: interaction.guild?.iconURL() || undefined,
+      });
+
+    const targetChannel = interaction.channel as GuildTextBasedChannel;
+
+    if (targetChannel && typeof targetChannel.send === "function") {
+      await targetChannel.send({ embeds: [announcementEmbed] });
+
+      await interaction.editReply({
+        content: `🚀 Successfully broadcasted the Branded \`${targetCategory.toUpperCase()}\` update panel.`,
+      });
+    } else {
+      await interaction.editReply({
+        content:
+          "❌ Failed to broadcast: Channel is invalid or does not support text outputs.",
+      });
+    }
+  },
 };

@@ -26,3 +26,25 @@ model AnnouncementConfig {
 
   @@map("announcement_configs")
 }
+
+enum RepeatInterval {
+  NONE
+  DAILY
+  WEEKLY
+}
+
+model ScheduledAnnouncement {
+  id             String         @id @default(uuid())
+  category       String
+  title          String
+  body           String
+  channelId      String         @map("channel_id")
+  sendAt         DateTime       @map("send_at")
+  repeatInterval RepeatInterval @default(NONE) @map("repeat_interval")
+  active         Boolean        @default(true)
+  createdBy      String         @map("created_by")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  lastSentAt     DateTime?      @map("last_sent_at")
+
+  @@map("scheduled_announcements")
+}

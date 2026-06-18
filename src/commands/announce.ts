@@ -1,60 +1,60 @@
-import { 
-    SlashCommandBuilder, 
-    PermissionFlagsBits, 
-    ChatInputCommandInteraction, 
-    ModalBuilder, 
-    TextInputBuilder, 
-    TextInputStyle, 
-    ActionRowBuilder 
-} from 'discord.js';
-import { Command } from '../types/framework.js';
+import {
+  SlashCommandBuilder,
+  PermissionFlagsBits,
+  ChatInputCommandInteraction,
+  ActionRowBuilder,
+  StringSelectMenuBuilder,
+  MessageFlags,
+} from "discord.js";
+import { Command } from "../types/framework.js";
+import { prisma } from "../database/client.js";
 
 const announceCommand: Command = {
-    data: new SlashCommandBuilder()
-        .setName('announce')
-        .setDescription('Launches the interactive layout modal to draft a branded server update.')
-        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
-        .addStringOption(option =>
-            option.setName('category')
-                .setDescription('The category key registered via /announce-config (e.g., updates)')
-                .setRequired(true)
-        ),
+  data: new SlashCommandBuilder()
+    .setName("announce")
+    .setDescription(
+      "Launches the interactive layout modal to draft a branded server update.",
+    )
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
-    async execute(interaction: ChatInputCommandInteraction): Promise<void> {
-        const categoryKey = interaction.options.getString('category', true).toLowerCase().trim();
+  async execute(interaction: ChatInputCommandInteraction): Promise<void> {
+    // Step 1: Pull every registered category so the admin can pick visually
+    const categories = await prisma.announcementConfig.findMany({
+      orderBy: { category: "asc" },
+    });
 
-        // Step 1: Build out the master modal container block
-        const modal = new ModalBuilder()
-            .setCustomId(`announce_modal_${categoryKey}`)
-            .setTitle(`Draft Announcement — [${categoryKey.toUpperCase()}]`);
-
-        // Step 2: Build out the title input component
-        const titleInput = new TextInputBuilder()
-            .setCustomId('announce_title')
-            .setLabel('EMBED HEADER TITLE')
-            .setPlaceholder('Enter a bold headline for this announcement...')
-            .setStyle(TextInputStyle.Short)
-            .setRequired(true)
-            .setMaxLength(100);
-
-        // Step 3: Build out the primary text message editor box supporting standard markdown
-        const bodyInput = new TextInputBuilder()
-            .setCustomId('announce_body')
-            .setLabel('MESSAGE BODY (SUPPORTS MARKDOWN)')
-            .setPlaceholder('## 📢 Update Details\n- Added new profile cards\n- Resolved database connection leaks...')
-            .setStyle(TextInputStyle.Paragraph)
-            .setRequired(true)
-            .setMaxLength(3000);
-
-        // Step 4: Map inputs onto dedicated Action Rows
-        const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(titleInput);
-        const secondActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(bodyInput);
-
-        modal.addComponents(firstActionRow, secondActionRow);
-
-        // Step 5: Render and display the popup view directly onto the admin client user interface
-        await interaction.showModal(modal);
+    if (categories.length === 0) {
+      await interaction.reply({
+        content:
+          "❌ No categories registered yet. Run `/announce-config` first to create one.",
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
     }
+
+    // Discord caps select menus at 25 options
+    const menuOptions = categories.slice(0, 25).map((config) => ({
+      label: config.category,
+      value: config.category,
+      description: `Brand color: ${config.hexColor}`,
+    }));
+
+    const categorySelect = new StringSelectMenuBuilder()
+      .setCustomId("announce_category_select")
+      .setPlaceholder("Select an announcement category...")
+      .addOptions(menuOptions);
+
+    const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+      categorySelect,
+    );
+
+    // Step 2: Hand off to the select menu — the modal opens once they pick one
+    await interaction.reply({
+      content: "Pick a category to continue drafting your announcement:",
+      components: [row],
+      flags: MessageFlags.Ephemeral,
+    });
+  },
 };
 
 export default announceCommand;
