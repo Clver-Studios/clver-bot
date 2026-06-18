@@ -101,4 +101,4 @@ jobs:
             docker compose up -d
 
             # Apply any pending Prisma schema changes against the production database
-            docker compose exec -T clevr-bot pnpm prisma db push
+            docker compose exec -T bot pnpm prisma db push
