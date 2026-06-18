@@ -76,6 +76,8 @@ jobs:
 
       - name: SSH into Production Server and Deploy Architecture
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           host: ${{ secrets.PRODUCTION_SERVER_IP }}
           username: ${{ secrets.PRODUCTION_SERVER_USER }}
@@ -83,9 +85,6 @@ jobs:
           port: 22
           # We pass the dynamic registry tokens as explicit shell environment variables
           envs: GITHUB_TOKEN
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
           script: |
             cd ~/clevr-bot
 
@@ -99,4 +98,7 @@ jobs:
             docker compose pull
 
             # Spin up the infrastructure containers (DB comes up first)
-            docker compose
+            docker compose up -d
+
+            # Apply any pending Prisma schema changes against the production database
+            docker compose exec -T clevr-bot pnpm prisma db push
