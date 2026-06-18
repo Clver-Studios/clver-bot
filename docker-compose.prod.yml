@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   bot:
-    image: ghcr.io/your_github_username_lowercase/clevr-bot:latest
+    image: ghcr.io/yukesh0a/clevr-bot:latest
     container_name: clevr-bot
     restart: always
     env_file:
