@@ -20,7 +20,7 @@ const serverStatusCommand: Command = {
             .setColor('#75ff83')
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed] });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     },
 };
 
