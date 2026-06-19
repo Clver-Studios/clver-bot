@@ -51,7 +51,7 @@ const profileCommand: Command = {
         const embed = new EmbedBuilder()
             .setTitle(`🪪 ${targetUser.username}'s Profile`)
             .setThumbnail(targetUser.displayAvatarURL())
-            .setColor('#5865F2')
+            .setColor('#75ff83')
             .addFields(
                 { name: 'Platform', value: formatList(state.clients, PLATFORM_LABELS), inline: true },
                 { name: 'Specialization', value: formatList(state.specialties, SPECIALTY_LABELS), inline: true },
