@@ -7,13 +7,15 @@ generator client {
 }
 
 model OnboardingState {
-  userId        String   @id @map("user_id")
-  currentStep   Int      @default(1) @map("current_step")
-  platform      String?
-  clients       String[]
-  specialties   String[]
-  notifications String[]
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  userId          String    @id @map("user_id")
+  currentStep     Int       @default(1) @map("current_step")
+  discoverySource String?   @map("discovery_source")
+  platform        String?
+  clients         String[]
+  specialties     String[]
+  notifications   String[]
+  completedAt     DateTime? @map("completed_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
   @@map("onboarding_states")
 }
