@@ -49,7 +49,7 @@ async function initializeClevrBotEngine(): Promise<void> {
         console.log(`Gateway Sync: Connection established safely. Logged in as ${readyClient.user.tag}`);
 
         readyClient.user.setPresence({
-            activities: [{ name: 'Clevr Studios Onboarding', type: ActivityType.Watching }],
+            activities: [{ name: 'Clver Studios', type: ActivityType.Watching }],
             status: 'online',
         });
 

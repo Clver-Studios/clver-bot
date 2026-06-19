@@ -67,7 +67,7 @@ function buildAnnouncementModal(
   const postedByInput = new TextInputBuilder()
     .setCustomId("announce_posted_by")
     .setLabel("POSTED BY (OPTIONAL SIGNATURE)")
-    .setPlaceholder("e.g. The Clevr Team")
+    .setPlaceholder("e.g. The Clver Team")
     .setStyle(TextInputStyle.Short)
     .setRequired(false)
     .setMaxLength(100);
@@ -185,8 +185,8 @@ export const announcementModalHandler: ComponentHandler = {
       .setTimestamp()
       .setFooter({
         text: postedBy
-          ? `${postedBy} • Clevr Team • ${targetCategory.toUpperCase()}`
-          : `Clevr Team • ${targetCategory.toUpperCase()}`,
+          ? `${postedBy} • Clver Team • ${targetCategory.toUpperCase()}`
+          : `Clver Team • ${targetCategory.toUpperCase()}`,
         iconURL: interaction.guild?.iconURL() || undefined,
       });
 

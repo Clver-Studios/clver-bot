@@ -36,7 +36,7 @@ export function startAnnouncementScheduler(client: Client): void {
           .setColor(resolvedHexColor)
           .setTimestamp()
           .setFooter({
-            text: `Clevr Studios • ${item.category.toUpperCase()}`,
+            text: `Clver Studios • ${item.category.toUpperCase()}`,
           });
 
         try {

@@ -1,5 +1,5 @@
 {
-  "name": "clevr-bot",
+  "name": "clver-bot",
   "version": "1.0.0",
   "description": "A scalable, 2026-optimized onboarding and announcement Discord bot",
   "main": "dist/index.js",
