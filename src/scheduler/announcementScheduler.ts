@@ -28,7 +28,7 @@ export function startAnnouncementScheduler(client: Client): void {
           where: { category: item.category },
         });
         const resolvedHexColor = (colorConfig?.hexColor ||
-          "#5865F2") as ColorResolvable;
+          "#75ff83") as ColorResolvable;
 
         const embed = new EmbedBuilder()
           .setTitle(item.title)

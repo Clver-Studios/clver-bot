@@ -17,7 +17,7 @@ const serverStatusCommand: Command = {
         const embed = new EmbedBuilder()
             .setTitle(`${guild.name} — Server Status`)
             .addFields({ name: 'Total Members', value: `${guild.memberCount}`, inline: true })
-            .setColor('#5865F2')
+            .setColor('#75ff83')
             .setTimestamp();
 
         await interaction.reply({ embeds: [embed] });

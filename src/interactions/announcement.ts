@@ -176,7 +176,7 @@ export const announcementModalHandler: ComponentHandler = {
       where: { category: targetCategory },
     });
     const resolvedHexColor = (colorConfig?.hexColor ||
-      "#5865F2") as ColorResolvable;
+      "#75ff83") as ColorResolvable;
 
     const announcementEmbed = new EmbedBuilder()
       .setTitle(embeddedTitle)

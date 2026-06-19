@@ -83,7 +83,7 @@ const setupOnboardingCommand: Command = {
                 'Before you get full access to the server, click below to complete a short setup. ' +
                 'It only takes a minute and helps us route you to the right channels and roles.'
             )
-            .setColor('#5865F2')
+            .setColor('#75ff83')
             .setFooter({ text: 'Clver Studios Community Verification Gateway' });
 
         const startRow = new ActionRowBuilder<ButtonBuilder>().addComponents(

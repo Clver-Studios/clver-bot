@@ -13,6 +13,11 @@ const environment = validateEnvironment();
 
 const TOTAL_STEPS = 4;
 
+// Sentinel value for the "no notifications" choice in the step 4 select
+// menu. Kept out of the notificationMap on purpose so it never resolves
+// to a role — selecting it should assign nothing.
+const SKIP_NOTIFICATIONS = "skip";
+
 function buildOnboardingEmbed(
   step: number,
   title: string,
@@ -25,16 +30,18 @@ function buildOnboardingEmbed(
     .setDescription(
       `${description}\n\n**Progress:** [${filledBar}] (Step ${step}/${TOTAL_STEPS})`,
     )
-    .setColor("#5865F2")
+    .setColor("#75ff83")
     .setFooter({ text: "Clver Studios Community Verification Gateway" });
 }
 
 // Maps a user's collected answers to real Discord role IDs.
-// Anything not recognized is safely skipped rather than thrown.
+// Anything not recognized (including the "skip" sentinel) is safely
+// skipped rather than thrown.
 function resolveRoleIds(answers: {
   discoverySource: string | null;
   clients: string[];
   specialties: string[];
+  notifications: string[];
 }): string[] {
   const discoveryMap: Record<string, string> = {
     youtube: environment.roleDiscoveryYoutube,
@@ -58,6 +65,11 @@ function resolveRoleIds(answers: {
     builder: environment.roleSpecBuilder,
   };
 
+  const notificationMap: Record<string, string> = {
+    updates: environment.roleNotiNetworkUpdates,
+    announcements: environment.roleNotiGeneralAnnouncements,
+  };
+
   const roleIds: string[] = [];
 
   if (answers.discoverySource && discoveryMap[answers.discoverySource]) {
@@ -72,7 +84,15 @@ function resolveRoleIds(answers: {
     if (specialtyMap[specialty]) roleIds.push(specialtyMap[specialty]);
   }
 
-  return roleIds;
+  for (const notification of answers.notifications) {
+    if (notification === SKIP_NOTIFICATIONS) continue;
+    if (notificationMap[notification])
+      roleIds.push(notificationMap[notification]);
+  }
+
+  // Filter out empty strings — happens if a notification role env var
+  // was left unset (they're optional, unlike discovery/platform/spec).
+  return roleIds.filter((id) => id.length > 0);
 }
 
 export const onboardingHandler: ComponentHandler = {
@@ -237,9 +257,10 @@ export const onboardingHandler: ComponentHandler = {
               description: "UI layouts, vector logos, media illustrations",
             },
             {
-              label: "Community Manager",
+              label: "Builder / Level Designer",
               value: "builder",
-              description: "Moderators, server operations, support staff",
+              description:
+                "In-game world builders, map makers, and level designers",
             },
           ]),
       );
@@ -258,7 +279,9 @@ export const onboardingHandler: ComponentHandler = {
     }
 
     // -------------------------------------------------------------
-    // STEP 3 -> 4: Specialization captured, ask notification prefs
+    // STEP 3 -> 4: Specialization captured, ask notification prefs.
+    // "None" is offered as a real option — picking it skips
+    // notification-role assignment entirely.
     // -------------------------------------------------------------
     if (step === "3") {
       await prisma.onboardingState.update({
@@ -271,7 +294,7 @@ export const onboardingHandler: ComponentHandler = {
           .setCustomId("onboard::4")
           .setPlaceholder("Choose notification frequencies...")
           .setMinValues(1)
-          .setMaxValues(3)
+          .setMaxValues(1)
           .addOptions([
             {
               label: "Network Updates",
@@ -284,10 +307,9 @@ export const onboardingHandler: ComponentHandler = {
               description: "Alerts regarding server events and outages",
             },
             {
-              label: "Promotional Offers",
-              value: "promo",
-              description:
-                "Receive notices regarding store alerts and marketplace updates",
+              label: "None",
+              value: SKIP_NOTIFICATIONS,
+              description: "Don't sign me up for any notification pings",
             },
           ]),
       );
@@ -297,7 +319,7 @@ export const onboardingHandler: ComponentHandler = {
           buildOnboardingEmbed(
             4,
             "Notification Preferences",
-            "Configure your alert thresholds. Select what you want to be pinged on.",
+            "Configure your alert thresholds. Select what you want to be pinged on, or choose None.",
           ),
         ],
         components: [row],
@@ -307,7 +329,8 @@ export const onboardingHandler: ComponentHandler = {
 
     // -------------------------------------------------------------
     // STEP 4: Final selection captured. Resolve roles, assign them,
-    // remove @unverified so the member can see the rest of the server.
+    // remove @unverified and grant @member so the user can see the
+    // rest of the server.
     // -------------------------------------------------------------
     if (step === "4") {
       const finalState = await prisma.onboardingState.update({
@@ -324,13 +347,16 @@ export const onboardingHandler: ComponentHandler = {
           discoverySource: finalState.discoverySource,
           clients: finalState.clients,
           specialties: finalState.specialties,
+          notifications: finalState.notifications,
         });
 
-        if (rolesToAssign.length > 0) {
-          await member.roles.add(rolesToAssign).catch((error) => {
-            console.error(`Role Assignment Failure for ${userId}:`, error);
-          });
-        }
+        // The member role is unconditional — everyone who finishes
+        // onboarding gets it, regardless of what else they picked.
+        rolesToAssign.push(environment.memberRoleId);
+
+        await member.roles.add(rolesToAssign).catch((error) => {
+          console.error(`Role Assignment Failure for ${userId}:`, error);
+        });
 
         await member.roles
           .remove(environment.unverifiedRoleId)
@@ -345,7 +371,8 @@ export const onboardingHandler: ComponentHandler = {
       const successEmbed = new EmbedBuilder()
         .setTitle("🎉 Setup Complete!")
         .setDescription(
-          "Your profile is set up and your roles have been assigned. Welcome to the rest of the server!",
+          "Your profile is set up and your roles have been assigned. Welcome to the rest of the server!\n\n" +
+            "👉 Head over to <#1467822857152102534> to read the guidelines!",
         )
         .setColor("#2ECC71")
         .setThumbnail(interaction.user.displayAvatarURL());

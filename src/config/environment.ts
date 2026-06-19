@@ -8,6 +8,7 @@ export interface EnvironmentVariables {
   clientId: string;
   guildId: string;
   databaseUrl: string;
+  memberRoleId: string;
 
   // Onboarding gateway configuration
   onboardingChannelId: string;
@@ -31,6 +32,10 @@ export interface EnvironmentVariables {
   roleSpecTextureArtist: string;
   roleSpecKeyArtist: string;
   roleSpecBuilder: string;
+
+  // Notification roles (Step 4)
+  roleNotiNetworkUpdates: string;
+  roleNotiGeneralAnnouncements: string;
 }
 
 // Step 2: Extract configurations, ensuring early escape checks
@@ -42,6 +47,7 @@ export function validateEnvironment(): EnvironmentVariables {
     DATABASE_URL,
     ONBOARDING_CHANNEL_ID,
     UNVERIFIED_ROLE_ID,
+    MEMBER_ROLE_ID,
     ROLE_DISCOVERY_YOUTUBE,
     ROLE_DISCOVERY_TWITTER,
     ROLE_DISCOVERY_TIKTOK,
@@ -54,7 +60,9 @@ export function validateEnvironment(): EnvironmentVariables {
     ROLE_SPEC_MODELER,
     ROLE_SPEC_TEXTURE_ARTIST,
     ROLE_SPEC_KEY_ARTIST,
-    ROLE_SPEC_BUILDER
+    ROLE_SPEC_BUILDER,
+    ROLE_NOTI_NETWORK_UPDATES,
+    ROLE_NOTI_GENERAL_ANNOUNCEMENTS
   } = process.env;
 
   // Step 3: Implement quick assertions to maintain high quality data safety
@@ -65,6 +73,7 @@ export function validateEnvironment(): EnvironmentVariables {
     DATABASE_URL,
     ONBOARDING_CHANNEL_ID,
     UNVERIFIED_ROLE_ID,
+    MEMBER_ROLE_ID,
     ROLE_DISCOVERY_YOUTUBE,
     ROLE_DISCOVERY_TWITTER,
     ROLE_DISCOVERY_TIKTOK,
@@ -77,7 +86,9 @@ export function validateEnvironment(): EnvironmentVariables {
     ROLE_SPEC_MODELER,
     ROLE_SPEC_TEXTURE_ARTIST,
     ROLE_SPEC_KEY_ARTIST,
-    ROLE_SPEC_BUILDER
+    ROLE_SPEC_BUILDER,
+    ROLE_NOTI_NETWORK_UPDATES,
+    ROLE_NOTI_GENERAL_ANNOUNCEMENTS
   };
 
   for (const [key, value] of Object.entries(required)) {
@@ -95,6 +106,7 @@ export function validateEnvironment(): EnvironmentVariables {
     databaseUrl: DATABASE_URL!,
     onboardingChannelId: ONBOARDING_CHANNEL_ID!,
     unverifiedRoleId: UNVERIFIED_ROLE_ID!,
+    memberRoleId: MEMBER_ROLE_ID!,
     roleDiscoveryYoutube: ROLE_DISCOVERY_YOUTUBE!,
     roleDiscoveryTwitter: ROLE_DISCOVERY_TWITTER!,
     roleDiscoveryTiktok: ROLE_DISCOVERY_TIKTOK!,
@@ -108,5 +120,7 @@ export function validateEnvironment(): EnvironmentVariables {
     roleSpecTextureArtist: ROLE_SPEC_TEXTURE_ARTIST!,
     roleSpecKeyArtist: ROLE_SPEC_KEY_ARTIST!,
     roleSpecBuilder: ROLE_SPEC_BUILDER!,
+    roleNotiNetworkUpdates: ROLE_NOTI_NETWORK_UPDATES!,
+    roleNotiGeneralAnnouncements: ROLE_NOTI_GENERAL_ANNOUNCEMENTS!,
   };
 }

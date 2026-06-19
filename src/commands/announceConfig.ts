@@ -14,7 +14,7 @@ const announceConfigCommand: Command = {
         )
         .addStringOption(option =>
             option.setName('color')
-                .setDescription('The branding hex color code (e.g., #5865F2, #2ECC71)')
+                .setDescription('The branding hex color code (e.g., #75ff83, #2ECC71)')
                 .setRequired(true)
         ),
 

@@ -73,7 +73,7 @@ const analyticsCommand: Command = {
                 { name: '🎮 Platform Edition', value: editionLines.join('\n') || 'No data', inline: false },
             )
             .setFooter({ text: `Based on ${totalMembers} completed profile(s) • Edition % can overlap (users may pick both)` })
-            .setColor('#5865F2')
+            .setColor('#75ff83')
             .setTimestamp();
 
         await interaction.editReply({ embeds: [embed] });
