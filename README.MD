@@ -1,4 +1,4 @@
-# Clevr Discord Bot
+# Clver Discord Bot
 
 An automated community administration, onboarding, and analytics gateway designed for the Clevr Discord ecosystem. The application utilizes Node.js, TypeScript, and Prisma to manage multi-step interactive onboarding flows, role allocations, scheduled/branded server announcements, and community growth analytics.
 
